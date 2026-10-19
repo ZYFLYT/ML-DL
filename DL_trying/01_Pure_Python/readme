@@ -39,10 +39,6 @@
 relu、sigmoid：两套代码**完全一模一样**，逐元素求导，没有任何区别。
 只有softmax分支逻辑不一样。
 
-### 4. 使用建议
-1. 学习原理、考研手推公式：跑 neuron_jacobi.py，看懂雅可比矩阵
-2. 工程实战、快速训练网络：跑 neuron_standard.py，和PyTorch逻辑对齐
-
 ### 5. 运行方式
 ```bash
 # 雅可比版本
