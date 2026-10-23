@@ -16,12 +16,19 @@ class HDDataset(Dataset):
         self.is_train = is_train
         data = pd.read_csv(csv_file)
 
-        if self.is_train:
+        # 判断是否有标签列，而不是依赖 is_train
+        self.has_labels = "Heart Disease" in data.columns
+
+        if self.has_labels:
             # 修复：把 'Presence' 变成 1，'Absence' 变成 0
             if data["Heart Disease"].dtype == object:
-                data["Heart Disease"] = data["Heart Disease"].map(
-                    {"Presence": 1, "Absence": 0}
+                data["Heart Disease"] = (
+                    data["Heart Disease"].str.strip().map({"Presence": 1, "Absence": 0})
                 )
+
+            if data["Heart Disease"].isnull().any():
+                data["Heart Disease"] = data["Heart Disease"].fillna(0)
+
             labels = data["Heart Disease"].values.astype(np.float32)
             feature_data = data.drop(["Heart Disease", "id"], errors="ignore")
         else:
@@ -57,13 +64,13 @@ class HDDataset(Dataset):
         feature_data = feature_data.fillna(0)
         feature_data_float = feature_data.values.astype(np.float32)
         self.feature_tensor = torch.tensor(feature_data_float, dtype=torch.float32)
-        if self.is_train:
+        if self.has_labels:
             self.labels_tensor = torch.tensor(labels, dtype=torch.float32)
 
     def __len__(self):
         return len(self.feature_tensor)
 
     def __getitem__(self, idx):
-        if self.is_train:
+        if self.has_labels:
             return self.feature_tensor[idx], self.labels_tensor[idx]
         return self.feature_tensor[idx]
