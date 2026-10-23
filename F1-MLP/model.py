@@ -2,9 +2,9 @@ import torch.nn as nn
 
 
 class F1MLP(nn.Module):
-    def __init__(self):
+    def __init__(self, input_dim):
         super(F1MLP, self).__init__()
-        self.fc1 = nn.Linear(in_features=928, out_features=128)
+        self.fc1 = nn.Linear(in_features=input_dim, out_features=128)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(0.3)
         self.fc2 = nn.Linear(in_features=128, out_features=1)

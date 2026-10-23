@@ -17,6 +17,8 @@ if __name__ == "__main__":
     train_dataset = F1Dataset("./data/train.csv")
     train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=0)
 
+    input_dim = train_dataset.feature_tensor.shape[1]
+
     test_dataset = F1Dataset(
         "./data/test.csv",
         is_train=False,
@@ -24,11 +26,11 @@ if __name__ == "__main__":
         train_std=train_dataset.stds,
         feature_cols=train_dataset.feature_cols,
     )
-    test_loader = DataLoader(test_dataset, batch_size=64, shuffle=True, num_workers=0)
+    test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False, num_workers=0)
 
-    model = F1MLP().to(device)
+    model = F1MLP(input_dim).to(device)
     criterion = nn.BCEWithLogitsLoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.01)
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     epochs = 5
     start_time = time.time()
@@ -37,7 +39,9 @@ if __name__ == "__main__":
         model.train()
         running_loss = 0.0
 
-        for i, (feature_tensor, labels) in enumerate(train_dataset):
+        for i, (feature_tensor, labels) in enumerate(train_loader):
+            labels = labels.unsqueeze(1)  # [64]，模型输出是 [64, 1]，把 labels 扩展一下
+
             feature_tensor, labels = feature_tensor.to(device), labels.to(device)
             optimizer.zero_grad()
             outputs = model(feature_tensor)
@@ -47,9 +51,9 @@ if __name__ == "__main__":
 
             running_loss += loss.item()
 
-            if (i + 1) % 10000 == 0:
+            if (i + 1) % 1000 == 0:
                 print(
-                    f"Epoch [{epoch + 1}/{epochs}], Step [{i + 1}/{len(train_loader)}], Loss: {running_loss / 10000:.4f}"
+                    f"Epoch [{epoch + 1}/{epochs}], Step [{i + 1}/{len(train_loader)}], Loss: {running_loss / 1000:.4f}"
                 )
                 running_loss = 0.0
 
@@ -68,9 +72,9 @@ if __name__ == "__main__":
     test_raw = pd.read_csv("./data/test.csv")
     submission = pd.DataFrame(
         {
-            "id": test_raw["id"],  # ⚠️ 确保列名是 'id'，看下 sample_submission.csv
-            "PitStop": all_probs,  # ⚠️ 确保列名是 'PitStop'，看下 sample_submission.csv
+            "id": test_raw["id"],
+            "PitStop": all_probs,
         }
     )
     submission.to_csv("submission.csv", index=False)
-    print("submission.csv 已经生成在 MNIST-MLP 目录下！")
+    print("submission.csv 已经生成在 F1-MLP 目录下")

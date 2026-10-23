@@ -20,17 +20,21 @@ class F1Dataset(Dataset):
             self.labels = data["PitStop"].values.astype(np.float32)
             feature_data = data.drop(columns=["id", "PitStop"], errors="ignore")
         else:
-            feature_data = data.drop(columns=["id"], errors="ignore")
+            feature_data = data.drop(columns=["id", "PitStop"], errors="ignore")
 
-        feature_data = pd.get_dummies(feature_data)
+        # 分别出原本的数据列，做标准化，文字的做one-hot
+        numeric_cols = feature_data.select_dtypes(include=[np.number]).columns
+        cat_cols = feature_data.select_dtypes(exclude=[np.number]).columns
+
+        cat_dummy = pd.get_dummies(feature_data[cat_cols], dummy_na=False)
+        num_data = feature_data[numeric_cols]
+
+        feature_data = pd.concat([cat_dummy, num_data], axis=1)
 
         if self.is_train:
             self.feature_cols = feature_data.columns.tolist()
         else:
             feature_data = feature_data.reindex(columns=feature_cols, fill_value=0)
-
-        # 分别出原本的数据列，做标准化，文字的做one-hot
-        numeric_cols = feature_data.select_dtypes(include=[np.number]).columns
 
         if self.is_train:
             # 计算每一列的均值和标准差
@@ -48,7 +52,8 @@ class F1Dataset(Dataset):
             ) / train_std[numeric_cols]
 
         feature_data = feature_data.fillna(0)
-        self.feature_tensor = torch.tensor(feature_data.values, dtype=torch.float32)
+        feature_data_float = feature_data.values.astype(np.float32)
+        self.feature_tensor = torch.tensor(feature_data_float, dtype=torch.float32)
 
         if self.is_train:
             self.labels_tensor = torch.tensor(self.labels, dtype=torch.float32)
