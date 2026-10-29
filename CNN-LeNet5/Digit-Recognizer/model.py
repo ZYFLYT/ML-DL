@@ -11,3 +11,14 @@ class LeNet5(nn.Module):
         self.conv2 = nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5)
 
         self.fc1 = nn.Linear(in_features=16 * 4 * 4, out_features=120)
+        self.fc2 = nn.Linear(in_features=120, out_features=84)
+        self.fc3 = nn.Linear(in_features=84, out_features=num_calsses)
+
+    def forward(self, x):
+        x = self.pool(self.relu(self.conv1(x)))
+        x = self.pool(self.relu(self.conv2(x)))
+        x = self.view(x.size(0), -1)
+        x = self.relu(self.fc1(x))
+        x = self.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
