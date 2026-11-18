@@ -8,13 +8,13 @@ class OneHotRNNClassifier(nn.Module):
         super(OneHotRNNClassifier, self).__init__()
 
         self.rnn = nn.RNN(
-            input_size=vocab_size, hidden_dim=hidden_dim, batch_first=True
+            input_size=vocab_size, hidden_size=hidden_dim, batch_first=True
         )
         self.fc = nn.Linear(hidden_dim, 1)
         self.dropout = nn.Dropout(0.5)
 
     def forward(self, x):
-        x_onehot = F.onehot(x, num_classes=self.rnn.input_size).float()
+        x_onehot = F.one_hot(x, num_classes=self.rnn.input_size).float()
 
         # 输入张量: (batch_size, seq_len, vocab_size)
         # out 形状: (batch_size, seq_len, hidden_dim)

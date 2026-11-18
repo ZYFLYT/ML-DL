@@ -29,6 +29,6 @@ class TweetDataset(Dataset):
 
         if self.is_train:
             label = self.df.iloc[idx]["target"]
-            label_tensor = torch.tensor(label, dtype=torch.long)
+            label_tensor = torch.tensor(label, dtype=torch.float32)
             return text_tensor, label_tensor
         return text_tensor
